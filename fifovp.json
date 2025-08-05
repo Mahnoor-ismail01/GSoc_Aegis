@@ -1,0 +1,47 @@
+
+{
+  "dut": {
+    "name": "fifo",
+    "inputs": [
+      {"name": "rst_n", "width": 1, "type": "logic"},
+      {"name": "wr_valid", "width": 1, "type": "logic"},
+      {"name": "rd_valid", "width": 1, "type": "logic"},
+      {"name": "data_in", "width": 8, "type": "logic"}
+    ],
+    "outputs": [
+      {"name": "data_out", "width": 8, "type": "logic"},
+      {"name": "wr_ready", "width": 1, "type": "logic"},
+      {"name": "rd_ready", "width": 1, "type": "logic"},
+      {"name": "full", "width": 1, "type": "logic"},
+      {"name": "empty", "width": 1, "type": "logic"},
+      {"name": "overflow", "width": 1, "type": "logic"}
+    ],
+    "sim_time": 1000
+  },
+  "test_cases": [
+    {
+      "name": "reset_test",
+      "loops": 5,
+      "constraints": ["rst_n == 0"],
+      "delay": 50
+    },
+    {
+      "name": "write_handshake_test",
+      "loops": 16,
+      "constraints": ["rst_n == 1", "wr_valid == 1", "wr_ready == 1", "rd_valid == 0"],
+      "delay": 20
+    },
+    {
+      "name": "overflow_test",
+      "loops": 17,
+      "constraints": ["rst_n == 1", "wr_valid == 1", "wr_ready == 1", "rd_valid == 0"],
+      "delay": 20
+    },
+    {
+      "name": "read_handshake_test",
+      "loops": 16,
+      "constraints": ["rst_n == 1", "wr_valid == 0", "rd_valid == 1", "rd_ready == 1"],
+      "delay": 20
+    }
+  ]
+}

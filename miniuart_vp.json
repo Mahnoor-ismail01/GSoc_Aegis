@@ -1,0 +1,58 @@
+
+{
+  "dut": {
+    "name": "miniuart",
+    "transaction_types": [
+      {
+        "name": "control",
+        "inputs": [
+          {"name": "WB_CLK_I", "width": 1, "type": "bit", "description": "Wishbone clock input"},
+          {"name": "WB_RST_I", "width": 1, "type": "bit", "description": "Asynchronous reset"},
+          {"name": "WB_ADDR_I", "width": 2, "type": "bit", "description": "Register selection address"},
+          {"name": "WB_DAT_I", "width": 8, "type": "bit", "description": "Data input"},
+          {"name": "WB_WE_I", "width": 1, "type": "bit", "description": "Write or read cycle selection"},
+          {"name": "WB_STB_I", "width": 1, "type": "bit", "description": "Transfer cycle specification"},
+          {"name": "RxD_PAD_I", "width": 1, "type": "bit", "description": "Serial input signal"}
+        ],
+        "outputs": [
+          {"name": "WB_DAT_O", "width": 8, "type": "bit", "description": "Data output"},
+          {"name": "WB_ACK_O", "width": 1, "type": "bit", "description": "Acknowledge of a transfer"},
+          {"name": "IntTx_O", "width": 1, "type": "bit", "description": "Transmit interrupt"},
+          {"name": "IntRx_O", "width": 1, "type": "bit", "description": "Receive interrupt"},
+          {"name": "TxD_PAD_O", "width": 1, "type": "bit", "description": "Serial output signal"}
+        ]
+      }
+    ],
+    "sim_time": 1000
+  },
+  "test_cases": [
+    {
+      "name": "reset_test",
+      "trans_type": "control",
+      "loops": 5,
+      "constraints": ["WB_RST_I == 1"],
+      "delay": 50
+    },
+    {
+      "name": "transmit_test",
+      "trans_type": "control",
+      "loops": 10,
+      "constraints": ["WB_WE_I == 1", "WB_ADDR_I == 0", "WB_DAT_I inside {[0:255]}"],
+      "delay": 100
+    },
+    {
+      "name": "receive_test",
+      "trans_type": "control",
+      "loops": 10,
+      "constraints": ["WB_WE_I == 0", "WB_ADDR_I == 0"],
+      "delay": 100
+    },
+    {
+      "name": "baudrate_variation_test",
+      "trans_type": "control",
+      "loops": 5,
+      "constraints": ["WB_RST_I == 0", "WB_DAT_I dist {0:/10, [1:255]:/90}"],
+      "delay": 200
+    }
+  ]
+}

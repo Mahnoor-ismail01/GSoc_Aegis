@@ -1,0 +1,58 @@
+
+{
+  "dut": {
+    "name": "adder",
+    "transaction_types": [
+      {
+        "name": "control",
+        "inputs": [
+          {"name": "rstn", "width": 1, "type": "bit", "description": "Reset (active low)"},
+          {"name": "a", "width": 8, "type": "bit", "description": "First operand"},
+          {"name": "b", "width": 8, "type": "bit", "description": "Second operand"}
+        ],
+        "outputs": [
+          {"name": "sum", "width": 8, "type": "bit", "description": "Sum output"},
+          {"name": "carry", "width": 1, "type": "bit", "description": "Carry output"}
+        ]
+      }
+    ],
+    "sim_time": 500
+  },
+  "test_cases": [
+    {
+      "name": "reset_test",
+      "trans_type": "control",
+      "loops": 5,
+      "constraints": ["rstn == 0"],
+      "delay": 50
+    },
+    {
+      "name": "basic_addition_test",
+      "trans_type": "control",
+      "loops": 10,
+      "constraints": ["rstn == 1", "a < 128", "b < 128"],
+      "delay": 100
+    },
+    {
+      "name": "max_value_test",
+      "trans_type": "control",
+      "loops": 5,
+      "constraints": ["rstn == 1", "a == 255", "b == 255"],
+      "delay": 50
+    },
+    {
+      "name": "random_addition_test",
+      "trans_type": "control",
+      "loops": 20,
+      "constraints": ["rstn == 1", "a dist {0:/25, [1:254]:/50, 255:/25}", "b dist {0:/25, [1:254]:/50, 255:/25}"],
+      "delay": 200
+    },
+    {
+      "name": "corner_case_test",
+      "trans_type": "control",
+      "loops": 10,
+      "constraints": ["rstn == 1", "a inside {0, 255}", "b inside {0, 255}"],
+      "delay": 100
+    }
+  ]
+}

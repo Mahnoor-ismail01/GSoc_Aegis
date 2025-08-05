@@ -1,0 +1,76 @@
+
+{
+  "dut": {
+    "name": "uart16550",
+    "transaction_types": [
+      {
+        "name": "control",
+        "inputs": [
+          {
+            "name": "wb_dat_i",
+            "width": 8,
+            "type": "logic",
+            "description": "WISHBONE data input (8-bit mode)"
+          },
+          {
+            "name": "wb_addr_i",
+            "width": 3,
+            "type": "logic",
+            "description": "WISHBONE address input (3-bit)"
+          },
+          {
+            "name": "wb_we_i",
+            "width": 1,
+            "type": "logic",
+            "description": "WISHBONE write enable"
+          },
+          {
+            "name": "wb_stb_i",
+            "width": 1,
+            "type": "logic",
+            "description": "WISHBONE strobe"
+          },
+          {
+            "name": "wb_cyc_i",
+            "width": 1,
+            "type": "logic",
+            "description": "WISHBONE cycle"
+          },
+          {
+            "name": "THR",
+            "width": "dynamic",
+            "bit_width": 8,
+            "type": "logic",
+            "description": "Transmit Holding Register FIFO (8-bit data input)"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "RB",
+            "width": "dynamic",
+            "bit_width": 8,
+            "type": "logic",
+            "description": "Receive Buffer FIFO (8-bit data output)"
+          }
+        ]
+      }
+    ],
+    "test_cases": [
+      {
+        "name": "transmit_test",
+        "trans_type": "control",
+        "loops": 10,
+        "constraints": ["THR.size() > 0", "wb_dat_i > 0"],
+        "delay": 50
+      },
+      {
+        "name": "receive_test",
+        "trans_type": "control",
+        "loops": 5,
+        "constraints": ["RB.size() > 0"],
+        "delay": 100
+      }
+    ],
+    "sim_time": 2000
+  }
+}
