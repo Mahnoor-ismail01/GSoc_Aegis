@@ -1,0 +1,117 @@
+{
+  "name": "adder_uvm_test",
+  "description": "JSON for UVM test case generation targeting the adder DUT",
+  "protocol": "none",
+  "protocol_config": {
+    "timing": 0,
+    "extra_signals": [],
+    "protocol_logic": {
+      "action": "none",
+      "condition": "",
+      "then": ""
+    },
+    "handshake": false,
+    "module": ""
+  },
+  "loops": 10,
+  "constraints": [
+    {"variable": "rstn", "value": "1"},
+    {"variable": "a", "range": [0, 255]},
+    {"variable": "b", "range": [0, 255]}
+  ],
+  "sim_time": 200,
+  "signals": [
+    {
+      "name": "rstn",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "a",
+      "type": "logic [7:0]",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "b",
+      "type": "logic [7:0]",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "sum",
+      "type": "logic [7:0]",
+      "direction": "output",
+      "default_value": 0
+    },
+    {
+      "name": "carry",
+      "type": "logic",
+      "direction": "output",
+      "default_value": 0
+    }
+  ],
+  "special_cases": {
+    "simple_mode": {
+      "enabled": true,
+      "description": "For the adder DUT with no protocol"
+    },
+    "complex_mode": {
+      "enabled": false,
+      "description": "Not applicable for simple adder",
+      "packet_size": 0,
+      "channels": []
+    }
+  },
+  "test_cases": [
+    {
+      "name": "basic_addition_test",
+      "description": "Test basic addition with valid inputs",
+      "loops": 10,
+      "constraints": [
+        {"variable": "rstn", "value": "1"},
+        {"variable": "a", "range": [0, 100]},
+        {"variable": "b", "range": [0, 100]}
+      ],
+      "sim_time": 200,
+      "protocol": "none",
+      "expected_behavior": {
+        "check": "sum == (a + b)",
+        "carry_check": "carry == ((a + b) > 255)"
+      }
+    },
+    {
+      "name": "reset_test",
+      "description": "Test reset behavior of the adder",
+      "loops": 5,
+      "constraints": [
+        {"variable": "rstn", "value": "0"},
+        {"variable": "a", "value": "0"},
+        {"variable": "b", "value": "0"}
+      ],
+      "sim_time": 100,
+      "protocol": "none",
+      "expected_behavior": {
+        "check": "sum == 0",
+        "carry_check": "carry == 0"
+      }
+    },
+    {
+      "name": "overflow_test",
+      "description": "Test addition with potential overflow",
+      "loops": 5,
+      "constraints": [
+        {"variable": "rstn", "value": "1"},
+        {"variable": "a", "range": [200, 255]},
+        {"variable": "b", "range": [200, 255]}
+      ],
+      "sim_time": 200,
+      "protocol": "none",
+      "expected_behavior": {
+        "check": "sum == (a + b) % 256",
+        "carry_check": "carry == 1"
+      }
+    }
+  ]
+}

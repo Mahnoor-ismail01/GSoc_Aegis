@@ -1,0 +1,150 @@
+{
+  "name": "uart16550_uvm_test",
+  "description": "JSON for UVM test case generation targeting the UART16550 IP core with Wishbone bus in 8-bit mode",
+  "protocol": "uart",
+  "protocol_config": {
+    "timing": 16,
+    "extra_signals": ["start_bit", "stop_bit"],
+    "protocol_logic": {
+      "action": "send",
+      "condition": "INT_O == 1",
+      "then": "vif.wb_dat_i = item.wb_dat_i"
+    },
+    "handshake": true,
+    "module": "uart16550_logic"
+  },
+  "loops": 5,
+  "constraints": [
+    {"variable": "wb_we_i", "value": "1"},
+    {"variable": "wb_dat_i", "range": [0, 255]},
+    {"variable": "wb_addr_i", "range": [0, 7]},
+    {"variable": "wb_stb_i", "value": "1"},
+    {"variable": "wb_cyc_i", "value": "1"}
+  ],
+  "sim_time": 600,
+  "signals": [
+    {
+      "name": "CLK",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "wb_dat_i",
+      "type": "logic [7:0]",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "wb_addr_i",
+      "type": "logic [2:0]",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "wb_we_i",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "wb_stb_i",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "wb_cyc_i",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "wb_ack_o",
+      "type": "logic",
+      "direction": "output",
+      "default_value": 0
+    }
+  ],
+  "registers": [
+    {"name": "IER", "type": "bit [7:0]", "description": "Interrupt Enable Register"},
+    {"name": "IIR", "type": "bit [7:0]", "description": "Interrupt Identification Register"},
+    {"name": "FCR", "type": "bit [7:0]", "description": "FIFO Control Register"},
+    {"name": "LCR", "type": "bit [7:0]", "description": "Line Control Register"},
+    {"name": "LSR", "type": "bit [7:0]", "description": "Line Status Register"},
+    {"name": "MCR", "type": "bit [7:0]", "description": "Modem Control Register"},
+    {"name": "MSR", "type": "bit [7:0]", "description": "Modem Status Register"},
+    {"name": "DL", "type": "bit [7:0]", "description": "Divisor Latches"},
+    {"name": "DL1", "type": "bit [7:0]", "description": "Divisor Latches [MSB]"},
+    {"name": "DL2", "type": "bit [7:0]", "description": "Divisor Latches [LSB]"},
+    {"name": "THR", "type": "bit [7:0][$]", "description": "Transmitter Holding Register"},
+    {"name": "RB", "type": "bit [7:0][$]", "description": "Readable Buffer"}
+  ],
+  "special_cases": {
+    "simple_mode": {
+      "enabled": false,
+      "description": "Not applicable for UART with FIFO"
+    },
+    "complex_mode": {
+      "enabled": true,
+      "description": "For UART16550 with Wishbone, FIFO, and registers",
+      "packet_size": 8,
+      "channels": ["data"]
+    }
+  },
+  "test_cases": [
+    {
+      "name": "transmit_test",
+      "description": "Test transmission of a byte via UART with Wishbone",
+      "loops": 5,
+      "constraints": [
+        {"variable": "wb_we_i", "value": "1"},
+        {"variable": "wb_addr_i", "value": "0"},
+        {"variable": "wb_dat_i", "range": [0, 255]},
+        {"variable": "wb_stb_i", "value": "1"},
+        {"variable": "wb_cyc_i", "value": "1"}
+      ],
+      "sim_time": 600,
+      "protocol": "uart",
+      "expected_behavior": {
+        "check": "THR == wb_dat_i",
+        "interrupt_check": "IIR[0] == 0"
+      }
+    },
+    {
+      "name": "receive_test",
+      "description": "Test reception of a byte via UART with Wishbone",
+      "loops": 3,
+      "constraints": [
+        {"variable": "wb_we_i", "value": "0"},
+        {"variable": "wb_addr_i", "value": "0"},
+        {"variable": "wb_stb_i", "value": "1"},
+        {"variable": "wb_cyc_i", "value": "1"}
+      ],
+      "sim_time": 400,
+      "protocol": "uart",
+      "expected_behavior": {
+        "check": "RB == wb_dat_i",
+        "interrupt_check": "IIR[0] == 0"
+      }
+    },
+    {
+      "name": "divisor_latch_test",
+      "description": "Test setting divisor latches with Wishbone",
+      "loops": 2,
+      "constraints": [
+        {"variable": "wb_we_i", "value": "1"},
+        {"variable": "wb_addr_i", "value": "0"},
+        {"variable": "wb_dat_i", "range": [0, 255]},
+        {"variable": "wb_stb_i", "value": "1"},
+        {"variable": "wb_cyc_i", "value": "1"}
+      ],
+      "sim_time": 300,
+      "protocol": "uart",
+      "expected_behavior": {
+        "check": "DL1 == wb_dat_i[15:8] && DL2 == wb_dat_i[7:0]",
+        "interrupt_check": "IIR[0] == 1"
+      }
+    }
+  ]
+}

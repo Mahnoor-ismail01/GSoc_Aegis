@@ -1,0 +1,166 @@
+{
+  "name": "mini_uart_uvm_test",
+  "description": "JSON for UVM test case generation targeting the MiniUART IP core",
+  "protocol": "uart",
+  "protocol_config": {
+    "timing": 10,
+    "extra_signals": ["start_bit", "stop_bit"],
+    "protocol_logic": {
+      "action": "send",
+      "condition": "IntTx_O == 1",
+      "then": "vif.WB_DAT_I = item.data"
+    },
+    "handshake": false,
+    "module": "mini_uart_logic"
+  },
+  "loops": 5,
+  "constraints": [
+    {"variable": "WB_RST_I", "value": "0"},
+    {"variable": "WB_WE_I", "value": "1"},
+    {"variable": "WB_DAT_I", "range": [0, 255]}
+  ],
+  "sim_time": 500,
+  "signals": [
+    {
+      "name": "WB_CLK_I",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "WB_RST_I",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "WB_ADDR_I",
+      "type": "logic [1:0]",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "WB_DAT_I",
+      "type": "logic [7:0]",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "WB_DAT_O",
+      "type": "logic [7:0]",
+      "direction": "output",
+      "default_value": 0
+    },
+    {
+      "name": "WB_WE_I",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "WB_STB_I",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "WB_ACK_O",
+      "type": "logic",
+      "direction": "output",
+      "default_value": 0
+    },
+    {
+      "name": "IntTx_O",
+      "type": "logic",
+      "direction": "output",
+      "default_value": 0
+    },
+    {
+      "name": "IntRx_O",
+      "type": "logic",
+      "direction": "output",
+      "default_value": 0
+    },
+    {
+      "name": "BR_CLK_I",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    },
+    {
+      "name": "TxD_PAD_O",
+      "type": "logic",
+      "direction": "output",
+      "default_value": 0
+    },
+    {
+      "name": "RxD_PAD_I",
+      "type": "logic",
+      "direction": "input",
+      "default_value": 0
+    }
+  ],
+  "special_cases": {
+    "simple_mode": {
+      "enabled": false,
+      "description": "Not applicable for UART protocol"
+    },
+    "complex_mode": {
+      "enabled": true,
+      "description": "For MiniUART with Wishbone and baudrate handling",
+      "packet_size": 8,
+      "channels": ["data"]
+    }
+  },
+  "test_cases": [
+    {
+      "name": "transmit_test",
+      "description": "Test transmission of a byte via UART",
+      "loops": 5,
+      "constraints": [
+        {"variable": "WB_RST_I", "value": "0"},
+        {"variable": "WB_WE_I", "value": "1"},
+        {"variable": "WB_ADDR_I", "value": "0"},
+        {"variable": "WB_DAT_I", "range": [0, 255]}
+      ],
+      "sim_time": 500,
+      "protocol": "uart",
+      "expected_behavior": {
+        "check": "TxD_PAD_O == item.data",
+        "interrupt_check": "IntTx_O == 1"
+      }
+    },
+    {
+      "name": "receive_test",
+      "description": "Test reception of a byte via UART",
+      "loops": 3,
+      "constraints": [
+        {"variable": "WB_RST_I", "value": "0"},
+        {"variable": "WB_WE_I", "value": "0"},
+        {"variable": "WB_ADDR_I", "value": "0"}
+      ],
+      "sim_time": 300,
+      "protocol": "uart",
+      "expected_behavior": {
+        "check": "WB_DAT_O == RxD_PAD_I",
+        "interrupt_check": "IntRx_O == 1"
+      }
+    },
+    {
+      "name": "reset_test",
+      "description": "Test reset behavior of MiniUART",
+      "loops": 2,
+      "constraints": [
+        {"variable": "WB_RST_I", "value": "1"},
+        {"variable": "WB_WE_I", "value": "0"},
+        {"variable": "WB_ADDR_I", "value": "0"}
+      ],
+      "sim_time": 200,
+      "protocol": "uart",
+      "expected_behavior": {
+        "check": "WB_DAT_O == 0",
+        "interrupt_check": "IntTx_O == 0 && IntRx_O == 0"
+      }
+    }
+  ]
+}

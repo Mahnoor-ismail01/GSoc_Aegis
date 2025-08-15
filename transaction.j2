@@ -1,0 +1,64 @@
+class {{ name }} extends uvm_sequence_item;
+    `uvm_object_utils({{ name }})
+
+    // --> Members
+    {% for signal in signals %}
+    {% if signal.direction == "input" or signal.direction == "inout" %}
+    rand {{ signal.type }} {{ signal.name }};
+    {% elif signal.direction == "output" %}
+    {{ signal.type }} {{ signal.name }};
+    {% endif %}
+    {% endfor %}
+
+    // --> Internal Registers (Dynamically Generated)
+    {% for reg in registers %}
+    {{ reg.type }} {{ reg.name }};
+    {% endfor %}
+
+    // --> Constraints
+    {% for constraint in constraints %}
+    {% if constraint.range is defined %}
+    constraint {{ constraint.variable }}_range { {{ constraint.variable }} inside {[{{ constraint.range[0] }}:{{ constraint.range[1] }}]}; }
+    {% elif constraint.value is defined %}
+    constraint {{ constraint.variable }}_value { {{ constraint.variable }} == {{ constraint.value }}; }
+    {% endif %}
+    {% endfor %}
+    {% for signal in signals if signal.direction == "input" %}
+    {% set width = signal.type | replace('logic ', '') | replace('[', '') | replace(']', '') | replace(':', '-') %}
+   
+    {% endfor %}
+    
+    function new(string name = "{{ name }}");
+        super.new(name);
+    endfunction
+
+    virtual function void do_copy(uvm_object rhs);
+        {{ name }} rhs_;
+        if (!$cast(rhs_, rhs)) begin
+            `uvm_fatal("do_copy", "Cast failed")
+        end
+        super.do_copy(rhs);
+        {% for signal in signals %}
+        {{ signal.name }} = rhs_.{{ signal.name }};
+        {% endfor %}
+        {% for reg in registers %}
+        {{ reg.name }} = rhs_.{{ reg.name }};
+        {% endfor %}
+    endfunction
+
+    function void do_print(uvm_printer printer);
+        super.do_print(printer);
+        {% for signal in signals %}
+        {% set width = signal.type | replace('logic ', '') | replace('[', '') | replace(']', '') | replace(':', '-') %}
+        printer.print_field("{{ signal.name }}", this.{{ signal.name }}, {{ width }}, UVM_DEC);
+        {% endfor %}
+        {% for reg in registers %}
+        {% if '$' in reg.type %}
+        foreach(this.{{ reg.name }}[i])
+            printer.print_field($sformatf("{{ reg.name }}[%0d]", i), this.{{ reg.name }}[i], 8, UVM_DEC);
+        {% else %}
+        printer.print_field("{{ reg.name }}", this.{{ reg.name }}, 8, UVM_DEC);
+        {% endif %}
+        {% endfor %}
+    endfunction
+endclass
