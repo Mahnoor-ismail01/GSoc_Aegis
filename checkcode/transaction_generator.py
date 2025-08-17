@@ -3,7 +3,7 @@ import jinja2
 
 
 try:
-    with open('uart16.json', 'r') as file:
+    with open('miniuartTem.json', 'r') as file:
         config = json.load(file)
 except FileNotFoundError:
     print("Error: uart16550_uvm_test.json not found.")

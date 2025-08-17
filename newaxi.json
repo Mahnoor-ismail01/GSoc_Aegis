@@ -1,0 +1,55 @@
+{
+  "dut": {
+    "name": "axi_complex_dut",
+    "protocol": {
+      "type": "axi",
+      "config": {
+        "address_width": 32,
+        "data_width": 32,
+        "max_burst_length": 16
+      }
+    },
+    "transaction_types": [
+      {
+        "name": "axi_transaction",
+        "inputs": [
+          {"name": "ACLK", "width": 1, "type": "logic", "description": "Clock"},
+          {"name": "ARESETn", "width": 1, "type": "logic", "description": "Active-low reset"},
+          {"name": "AWADDR", "width": 32, "type": "logic", "description": "Write address"},
+          {"name": "AWLEN", "width": 4, "type": "logic", "description": "Burst length"},
+          {"name": "AWSIZE", "width": 3, "type": "logic", "description": "Burst size"},
+          {"name": "AWBURST", "width": 2, "type": "logic", "description": "Burst type"},
+          {"name": "AWVALID", "width": 1, "type": "logic", "description": "Address valid"},
+          {"name": "WDATA", "width": 32, "type": "logic", "description": "Write data"},
+          {"name": "WSTRB", "width": 4, "type": "logic", "description": "Write strobes"},
+          {"name": "WLAST", "width": 1, "type": "logic", "description": "Last data beat"},
+          {"name": "WVALID", "width": 1, "type": "logic", "description": "Write valid"}
+        ],
+        "outputs": [
+          {"name": "AWREADY", "width": 1, "type": "logic", "description": "Address ready"},
+          {"name": "WREADY", "width": 1, "type": "logic", "description": "Write ready"},
+          {"name": "BRESP", "width": 2, "type": "logic", "description": "Write response"},
+          {"name": "BVALID", "width": 1, "type": "logic", "description": "Response valid"},
+          {"name": "BREADY", "width": 1, "type": "logic", "description": "Response ready"}
+        ],
+        "constraints": [
+          {"variable": "AWADDR", "rule": "alignment", "value": 4},
+          {"variable": "AWLEN", "range": [0, 15]},
+          {"variable": "AWSIZE", "range": [0, 2]},
+          {"variable": "AWBURST", "values": [0, 1, 2]},
+          {"variable": "WDATA", "range": [0, 4294967295]}
+        ]
+      }
+    ],
+    "sim_time": 2000
+  },
+  "test_cases": [
+    {
+      "name": "write_burst_test",
+      "trans_type": "axi_transaction",
+      "loops": 5,
+      "constraints": ["AWVALID == 1", "WVALID == 1", "AWLEN inside {[1:15]}"],
+      "delay": 100
+    }
+  ]
+}

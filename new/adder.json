@@ -1,0 +1,87 @@
+{
+  "dut": {
+    "name": "adder",
+    "signals": [
+      {
+        "name": "rstn",
+        "type": "bit",
+        "width": 1,
+        "constraints": "rstn inside {0, 1}",
+        "field_flags": "UVM_ALL_ON"
+      },
+      {
+        "name": "a",
+        "type": "logic",
+        "width": 8,
+        "constraints": "a inside {[0:255]}",
+        "field_flags": "UVM_ALL_ON"
+      },
+      {
+        "name": "b",
+        "type": "logic",
+        "width": 8,
+        "constraints": "b inside {[0:255]}",
+        "field_flags": "UVM_ALL_ON"
+      },
+      {
+        "name": "sum",
+        "type": "logic",
+        "width": 8,
+        "field_flags": "UVM_ALL_ON | UVM_NO_COMPARE"
+      },
+      {
+        "name": "carry",
+        "type": "bit",
+        "width": 1,
+        "field_flags": "UVM_ALL_ON | UVM_NO_COMPARE"
+      }
+    ]
+  },
+  "testcases": [
+    {
+      "name": "basic_addition",
+      "protocol": "adder",
+      "sequence": {
+        "type": "single",
+        "constraints": {
+          "rstn": "1"
+        }
+      }
+    },
+    {
+      "name": "reset_test",
+      "protocol": "adder",
+      "sequence": {
+        "type": "single",
+        "constraints": {
+          "rstn": "0"
+        }
+      }
+    },
+    {
+      "name": "corner_case_max",
+      "protocol": "adder",
+      "sequence": {
+        "type": "single",
+        "constraints": {
+          "rstn": "1",
+          "a": "255",
+          "b": "255"
+        }
+      }
+    }
+  ],
+  "output": {
+    "transaction_file": "adder_transaction.sv",
+    "sequence_files": [
+      "basic_addition_sequence.sv",
+      "reset_test_sequence.sv",
+      "corner_case_max_sequence.sv"
+    ],
+    "test_files": [
+      "basic_addition_test.sv",
+      "reset_test_test.sv",
+      "corner_case_max_test.sv"
+    ]
+  }
+}

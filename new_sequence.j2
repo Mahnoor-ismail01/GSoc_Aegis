@@ -1,0 +1,54 @@
+```
+import uvm_pkg::*;
+`include "{{ dut_name }}_{{ transaction_type }}_packet.sv"
+
+class {{ sequence_name }} extends uvm_sequence;
+  `uvm_object_utils({{ sequence_name }})
+
+  // Reference to the transaction packet
+  rand {{ dut_name }}_{{ transaction_type }}_packet pkt;
+
+  // Constructor
+  function new(string name = "{{ sequence_name }}");
+    super.new(name);
+  endfunction
+
+  // Body task to generate and randomize transactions
+  virtual task body();
+    repeat ({{ test_case.loops }}) begin
+      `uvm_info("SEQUENCE", $sformatf("Starting iteration %0d for %s", this.get_sequence_id(), "{{ test_case.name }}"), UVM_LOW)
+      pkt = {{ dut_name }}_{{ transaction_type }}_packet::type_id::create("pkt");
+      if (!pkt.randomize() with {
+        {% for constraint in test_case.constraints %}
+        {{ constraint }};
+        {% endfor %}
+      }) begin
+        `uvm_error("RANDOMIZE", "Randomization failed")
+      end
+
+      // Apply delay
+      #{{ test_case.delay }};
+
+      // Start item and finish item
+      start_item(pkt);
+      finish_item(pkt);
+
+      // Check expected output (basic comparison)
+      if (pkt.rstn) begin
+        if (pkt.sum != (pkt.a + pkt.b)[7:0] || pkt.carry != (pkt.a + pkt.b)[8]) begin
+          `uvm_error("CHECK", $sformatf("Mismatch: sum=%0h, carry=%0b, expected sum=%0h, carry=%0b", pkt.sum, pkt.carry, (pkt.a + pkt.b)[7:0], (pkt.a + pkt.b)[8]))
+        end
+      {% for key, value in test_case.expected_output.items() %}
+        if (pkt.{{ key }} != {{ value }}) begin
+          `uvm_error("CHECK", $sformatf("Expected {{ key }}=%s, got %s", {{ value }}, pkt.{{ key }}))
+        end
+      {% endfor %}
+      end else begin
+        if (pkt.sum != 0 || pkt.carry != 0) begin
+          `uvm_error("CHECK", "Reset active but sum or carry not zero")
+        end
+      end
+    end
+  endtask
+endclass
+```

@@ -1,6 +1,7 @@
-class adder_uvm_test_transaction extends uvm_sequence_item;
-    `uvm_object_utils(adder_uvm_test_transaction)
+class adder_uvm_test extends uvm_sequence_item;
+    `uvm_object_utils(adder_uvm_test)
 
+    // --> Members
     
     
     rand logic rstn;
@@ -23,12 +24,28 @@ class adder_uvm_test_transaction extends uvm_sequence_item;
     
     
 
-    function new(string name = "adder_uvm_test_transaction");
+    // --> Internal Registers (Dynamically Generated)
+    
+
+    // --> Constraints
+    
+    
+    
+   
+    
+    
+   
+    
+    
+   
+    
+    
+    function new(string name = "adder_uvm_test");
         super.new(name);
     endfunction
 
     virtual function void do_copy(uvm_object rhs);
-        adder_uvm_test_transaction rhs_;
+        adder_uvm_test rhs_;
         if (!$cast(rhs_, rhs)) begin
             `uvm_fatal("do_copy", "Cast failed")
         end
@@ -43,6 +60,28 @@ class adder_uvm_test_transaction extends uvm_sequence_item;
         sum = rhs_.sum;
         
         carry = rhs_.carry;
+        
+        
+    endfunction
+
+    function void do_print(uvm_printer printer);
+        super.do_print(printer);
+        
+        
+        printer.print_field("rstn", this.rstn, logic, UVM_DEC);
+        
+        
+        printer.print_field("a", this.a, 7-0, UVM_DEC);
+        
+        
+        printer.print_field("b", this.b, 7-0, UVM_DEC);
+        
+        
+        printer.print_field("sum", this.sum, 7-0, UVM_DEC);
+        
+        
+        printer.print_field("carry", this.carry, logic, UVM_DEC);
+        
         
     endfunction
 endclass

@@ -2,57 +2,70 @@
 {
   "dut": {
     "name": "adder",
+    "description": "8-bit adder module with reset",
+    "author": "Unknown",
+    "email": "unknown@example.com",
+    "revision": "0.1",
+    "date": "2025-08-17",
+    "sim_time": 1000,
+    "clock_period": 10,
+    "reset_duration": 50,
+    "protocol": {
+      "name": "Generic",
+      "baud_rate": "none",
+      "data_bits": 8,
+      "parity": "none",
+      "stop_bits": 1,
+      "interface": "none",
+      "additional_settings": "none"
+    },
     "transaction_types": [
       {
-        "name": "control",
+        "name": "add_operation",
+        "description": "Transaction for 8-bit addition operation",
         "inputs": [
-          {"name": "rstn", "width": 1, "type": "bit", "description": "Reset (active low)"},
-          {"name": "a", "width": 8, "type": "bit", "description": "First operand"},
-          {"name": "b", "width": 8, "type": "bit", "description": "Second operand"}
+          {"name": "rstn", "width": 1, "type": "logic", "description": "Active-low reset input"},
+          {"name": "a", "width": 8, "type": "rand logic", "description": "First 8-bit input operand"},
+          {"name": "b", "width": 8, "type": "rand logic", "description": "Second 8-bit input operand"}
         ],
         "outputs": [
-          {"name": "sum", "width": 8, "type": "bit", "description": "Sum output"},
-          {"name": "carry", "width": 1, "type": "bit", "description": "Carry output"}
-        ]
+          {"name": "sum", "width": 8, "type": "logic", "description": "8-bit sum output"},
+          {"name": "carry", "width": 1, "type": "logic", "description": "Carry-out output"}
+        ],
+        "constraints": [
+          {"a": "inside {[0:255]}"},
+          {"b": "inside {[0:255]}"}
+        ],
+        "additional_settings": "none"
       }
-    ],
-    "sim_time": 500
+    ]
   },
   "test_cases": [
     {
       "name": "reset_test",
-      "trans_type": "control",
+      "description": "Test reset functionality",
+      "trans_type": "add_operation",
       "loops": 5,
       "constraints": ["rstn == 0"],
-      "delay": 50
+      "delay": 50,
+      "expected_output": {"sum": 0, "carry": 0}
     },
     {
-      "name": "basic_addition_test",
-      "trans_type": "control",
+      "name": "addition_test",
+      "description": "Test normal addition operation",
+      "trans_type": "add_operation",
       "loops": 10,
-      "constraints": ["rstn == 1", "a < 128", "b < 128"],
-      "delay": 100
-    },
-    {
-      "name": "max_value_test",
-      "trans_type": "control",
-      "loops": 5,
-      "constraints": ["rstn == 1", "a == 255", "b == 255"],
-      "delay": 50
-    },
-    {
-      "name": "random_addition_test",
-      "trans_type": "control",
-      "loops": 20,
-      "constraints": ["rstn == 1", "a dist {0:/25, [1:254]:/50, 255:/25}", "b dist {0:/25, [1:254]:/50, 255:/25}"],
-      "delay": 200
-    },
-    {
-      "name": "corner_case_test",
-      "trans_type": "control",
-      "loops": 10,
-      "constraints": ["rstn == 1", "a inside {0, 255}", "b inside {0, 255}"],
-      "delay": 100
+      "constraints": ["rstn == 1", "a inside {[0:255]}", "b inside {[0:255]}"],
+      "delay": 100,
+      "expected_output": {"sum": "inside {[0:255]}", "carry": "inside {[0:1]}"}
     }
-  ]
+  ],
+  "global_config": {
+    "random_seed": 12345,
+    "timeout": 5000,
+    "error_injection": "none",
+    "verbosity": "medium",
+    "logging": "enabled",
+    "additional_config": "none"
+  }
 }

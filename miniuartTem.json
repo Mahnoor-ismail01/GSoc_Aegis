@@ -1,0 +1,94 @@
+
+{
+  "dut": {
+    "name": "miniuart",
+    "description": "MiniUART IP Core for serial communication",
+    "author": "Philippe Carton",
+    "email": "philippe.carton2@libertysurf.fr",
+    "revision": "0.1",
+    "date": "2002-09-10",
+    "sim_time": 1000,
+    "clock_period": 20,
+    "reset_duration": 100,
+    "protocol": {
+      "name": "UART",
+      "baud_rate": 9600,
+      "data_bits": 8,
+      "parity": "none",
+      "stop_bits": 1,
+      "interface": "Wishbone"
+    },
+    "transaction_types": [
+      {
+        "name": "control",
+        "description": "Wishbone control and status transaction",
+        "inputs": [
+          {"name": "WB_CLK_I", "width": 1, "type": "logic", "description": "Wishbone clock input"},
+          {"name": "WB_RST_I", "width": 1, "type": "logic", "description": "Asynchronous active-high reset"},
+          {"name": "WB_ADDR_I", "width": 2, "type": "rand logic", "description": "Register selection address (0-3)"},
+          {"name": "WB_DAT_I", "width": 8, "type": "rand logic", "description": "Data input for registers"},
+          {"name": "WB_WE_I", "width": 1, "type": "rand logic", "description": "Write enable (1) or read (0)"},
+          {"name": "WB_STB_I", "width": 1, "type": "rand logic", "description": "Strobe signal for transfer cycle"},
+          {"name": "SRX_PAD_I", "width": 1, "type": "logic", "description": "Serial receive input"}
+        ],
+        "outputs": [
+          {"name": "WB_DAT_O", "width": 8, "type": "logic", "description": "Data output from registers"},
+          {"name": "WB_ACK_O", "width": 1, "type": "logic", "description": "Acknowledge signal for transfer"},
+          {"name": "IntTx_O", "width": 1, "type": "logic", "description": "Transmit interrupt output"},
+          {"name": "IntRx_O", "width": 1, "type": "logic", "description": "Receive interrupt output"},
+          {"name": "TxD_PAD_O", "width": 1, "type": "logic", "description": "Serial transmit output"}
+        ],
+        "constraints": [
+          {"WB_ADDR_I": "inside {[0:3]}"},
+          {"WB_DAT_I": "inside {[0:255]}"},
+          {"WB_WE_I": "dist {0:/50, 1:/50}"}
+        ]
+      }
+    ]
+  },
+  "test_cases": [
+    {
+      "name": "reset_test",
+      "description": "Test reset functionality",
+      "trans_type": "control",
+      "loops": 5,
+      "constraints": ["WB_RST_I == 1", "WB_STB_I == 0", "WB_WE_I == 0"],
+      "delay": 50,
+      "expected_output": {"WB_ACK_O": 0, "IntTx_O": 0, "IntRx_O": 0}
+    },
+    {
+      "name": "transmit_test",
+      "description": "Test data transmission",
+      "trans_type": "control",
+      "loops": 10,
+      "constraints": ["WB_WE_I == 1", "WB_ADDR_I == 0", "WB_DAT_I inside {[65:90]}", "WB_STB_I == 1"],
+      "delay": 100,
+      "expected_output": {"WB_ACK_O": 1, "IntTx_O": 1, "TxD_PAD_O": 1}
+    },
+    {
+      "name": "receive_test",
+      "description": "Test data reception",
+      "trans_type": "control",
+      "loops": 10,
+      "constraints": ["WB_WE_I == 0", "WB_ADDR_I == 0", "WB_STB_I == 1", "SRX_PAD_I == 1"],
+      "delay": 100,
+      "expected_output": {"WB_ACK_O": 1, "IntRx_O": 1, "WB_DAT_O": "inside {[65:90]}"}
+    },
+    {
+      "name": "baudrate_variation_test",
+      "description": "Test varying baud rate settings",
+      "trans_type": "control",
+      "loops": 5,
+      "constraints": ["WB_RST_I == 0", "WB_WE_I == 1", "WB_ADDR_I == 1", "WB_DAT_I dist {0:/10, [1:255]:/90}"],
+      "delay": 200,
+      "expected_output": {"WB_ACK_O": 1, "IntTx_O": 0, "IntRx_O": 0}
+    }
+  ],
+  "global_config": {
+    "random_seed": 12345,
+    "timeout": 5000,
+    "error_injection": "none",
+    "verbosity": "medium",
+    "logging": "enabled"
+  }
+}
