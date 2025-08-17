@@ -20,22 +20,19 @@ def generate_files(vp_file):
     test_cases = vp.get("test_cases", [])
     sim_time = dut.get("sim_time", 1000)
 
-    # Validate transaction types
+    # Validate transaction types and signals
     for ttype in transaction_types:
-        if "name" not in ttype or "inputs" not in ttype or "outputs" not in ttype:
-            raise ValueError(f"Transaction type missing name, inputs, or outputs: {ttype}")
+        if not all(key in ttype for key in ["name", "inputs", "outputs"]):
+            raise ValueError(f"Transaction type missing required fields: {ttype}")
         for sig in ttype["inputs"] + ttype["outputs"]:
-            if "name" not in sig or "width" not in sig:
-                raise ValueError(f"Signal missing name or width: {sig}")
+            if not all(key in sig for key in ["name", "width"]):
+                raise ValueError(f"Signal missing required fields: {sig}")
             if sig["width"] != "dynamic" and (not isinstance(sig["width"], int) or sig["width"] < 1):
                 raise ValueError(f"Invalid width for signal {sig.get('name', 'unknown')}: {sig.get('width')}")
-            if "type" not in sig:
-                sig["type"] = "logic"
-            if sig["width"] == "dynamic" and "bit_width" not in sig:
-                raise ValueError(f"Dynamic signal {sig.get('name', 'unknown')} must include bit_width")
-            if sig["width"] == "dynamic" and (not isinstance(sig.get("bit_width"), int) or sig.get("bit_width") < 1):
-                raise ValueError(f"Invalid bit_width for dynamic signal {sig.get('name', 'unknown')}: {sig.get('bit_width')}")
-            sig["path"] = sig.get("path", sig["name"])
+            # Ensure adder inputs a and b are 8-bit
+            if sig["name"] in ["a", "b"] and sig["width"] != 8:
+                raise ValueError(f"Signal {sig.get('name', 'unknown')} must have width 8 for adder")
+            sig["type"] = sig.get("type", "logic")
             sig["description"] = sig.get("description", "")
             sig["constraints"] = sig.get("constraints", [])
 
@@ -61,10 +58,12 @@ def generate_files(vp_file):
     sequence_template = env.get_template('new_sequence.j2')
     for test_case in test_cases:
         sequence_name = f"{dut_name}_{test_case['name']}_seq"
+        trans_type = test_case.get("trans_type", transaction_types[0]["name"])
+        matching_ttype = next((t for t in transaction_types if t["name"] == trans_type), transaction_types[0])
         sequence_file = f"generated/{sequence_name}.sv"
         try:
             with open(sequence_file, "w") as f:
-                f.write(sequence_template.render(dut_name=dut_name, sequence_name=sequence_name, transaction_type=transaction_types[0]["name"], test_case=test_case, sim_time=sim_time))
+                f.write(sequence_template.render(dut_name=dut_name, sequence_name=sequence_name, transaction_type=matching_ttype["name"], test_case=test_case, sim_time=sim_time))
             print(f"Generated {sequence_file}")
         except Exception as e:
             print(f"Error writing {sequence_file}: {e}")
@@ -72,6 +71,6 @@ def generate_files(vp_file):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python generate_transaction.py <vp_json_file>")
+        print("Usage: python new_python.py <vp_json_file>")
         sys.exit(1)
     generate_files(sys.argv[1])

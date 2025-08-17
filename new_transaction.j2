@@ -6,9 +6,9 @@ class {{ dut_name }}_{{ ttype_name }}_packet extends uvm_sequence_item;
 
 {% for i in inputs %}
   {% if i.type.startswith('rand') %}
-  {{ i.type }} {% if i.width == "dynamic" %}[{{ i.bit_width - 1 }}:0] {$} {% elif i.width > 1 and not i.type.startswith('enum') and not i.type.startswith('struct') %}[{{ i.width - 1 }}:0] {% endif %}{{ i.name }}; // Input{% if i.description %} ({{ i.description }}){% endif %}
+  {{ i.type }} [{{ i.width - 1 }}:0] {{ i.name }}; // Input{% if i.description %} ({{ i.description }}){% endif %}
   {% else %}
-  {{ i.type }} {% if i.width == "dynamic" %}[{{ i.bit_width - 1 }}:0] {$} {% elif i.width > 1 and not i.type.startswith('enum') and not i.type.startswith('struct') %}[{{ i.width - 1 }}:0] {% endif %}{{ i.name }}; // Input{% if i.description %} ({{ i.description }}){% endif %}
+  {{ i.type }} [{{ i.width - 1 }}:0] {{ i.name }}; // Input{% if i.description %} ({{ i.description }}){% endif %}
   {% endif %}
   {% if i.constraints %}
   constraint {{ i.name }}_c { {% for c in i.constraints %}{{ c }}; {% endfor %} }
@@ -17,9 +17,9 @@ class {{ dut_name }}_{{ ttype_name }}_packet extends uvm_sequence_item;
 
 {% for o in outputs %}
   {% if o.type.startswith('rand') %}
-  {{ o.type }} {% if o.width == "dynamic" %}[{{ o.bit_width - 1 }}:0] {$} {% elif o.width > 1 and not o.type.startswith('enum') and not o.type.startswith('struct') %}[{{ o.width - 1 }}:0] {% endif %}{{ o.name }}; // Output{% if o.description %} ({{ o.description }}){% endif %}
+  {{ o.type }} [{{ o.width - 1 }}:0] {{ o.name }}; // Output{% if o.description %} ({{ o.description }}){% endif %}
   {% else %}
-  {{ o.type }} {% if o.width == "dynamic" %}[{{ o.bit_width - 1 }}:0] {$} {% elif o.width > 1 and not o.type.startswith('enum') and not o.type.startswith('struct') %}[{{ o.width - 1 }}:0] {% endif %}{{ o.name }}; // Output{% if o.description %} ({{ o.description }}){% endif %}
+  {{ o.type }} [{{ o.width - 1 }}:0] {{ o.name }}; // Output{% if o.description %} ({{ o.description }}){% endif %}
   {% endif %}
 {% endfor %}
 
@@ -31,28 +31,13 @@ class {{ dut_name }}_{{ ttype_name }}_packet extends uvm_sequence_item;
     {{ dut_name }}_{{ ttype_name }}_packet tmp;
     super.do_copy(rhs);
     if (!$cast(tmp, rhs)) `uvm_fatal("COPY", "Cast failed in do_copy")
-{% for i in signals %}
-    {% if i.width == "dynamic" %}
-    foreach (tmp.{{ i.name }}[j]) this.{{ i.name }}[j] = tmp.{{ i.name }}[j];
-    {% elif i.type.startswith('struct') or i.type.startswith('enum') %}
+    {% for i in signals %}
     this.{{ i.name }} = tmp.{{ i.name }};
-    {% else %}
-    this.{{ i.name }} = tmp.{{ i.name }};
-    {% endif %}
-{% endfor %}
+    {% endfor %}
   endfunction
 
   virtual function string convert2string();
-    string s = $sformatf("{% for i in signals %}{% if i.width != 'dynamic' and not i.type.startswith('enum') and not i.type.startswith('struct') %}{{ i.path }}=%0{{ 'h' if i.width > 1 or i.type.startswith('enum') else 'b' }}{% if not loop.last %} {% endif %}{% endif %}{% endfor %}", {% for i in signals %}{% if i.width != 'dynamic' and not i.type.startswith('enum') and not i.type.startswith('struct') %}{{ i.name }}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %});
-    {% for i in signals %}
-    {% if i.width == "dynamic" %}
-    foreach ({{ i.name }}[j]) s = {s, $sformatf(" {{ i.path }}[%0d]=%0h", j, {{ i.name }}[j])};
-    {% elif i.type.startswith('enum') %}
-    s = {s, $sformatf(" {{ i.path }}=%s", {{ i.name }}.name())};
-    {% elif i.type.startswith('struct') %}
-    s = {s, $sformatf(" {{ i.path }}={enable=%0b, priority=%0h}", {{ i.name }}.enable, {{ i.name }}.priority)};
-    {% endif %}
-    {% endfor %}
+    string s = $sformatf("{% for i in signals %}{{ i.path }}=%0h{% if not loop.last %} {% endif %}{% endfor %}", {% for i in signals %}{{ i.name }}{% if not loop.last %}, {% endif %}{% endfor %});
     return s;
   endfunction
 endclass

@@ -1,4 +1,4 @@
-```
+
 import uvm_pkg::*;
 `include "adder_add_operation_packet.sv"
 
@@ -33,26 +33,7 @@ class adder_reset_test_seq extends uvm_sequence;
       start_item(pkt);
       finish_item(pkt);
 
-      // Check expected output (basic comparison)
-      if (pkt.rstn) begin
-        if (pkt.sum != (pkt.a + pkt.b)[7:0] || pkt.carry != (pkt.a + pkt.b)[8]) begin
-          `uvm_error("CHECK", $sformatf("Mismatch: sum=%0h, carry=%0b, expected sum=%0h, carry=%0b", pkt.sum, pkt.carry, (pkt.a + pkt.b)[7:0], (pkt.a + pkt.b)[8]))
-        end
       
-        if (pkt.sum != 0) begin
-          `uvm_error("CHECK", $sformatf("Expected sum=%s, got %s", 0, pkt.sum))
-        end
-      
-        if (pkt.carry != 0) begin
-          `uvm_error("CHECK", $sformatf("Expected carry=%s, got %s", 0, pkt.carry))
-        end
-      
-      end else begin
-        if (pkt.sum != 0 || pkt.carry != 0) begin
-          `uvm_error("CHECK", "Reset active but sum or carry not zero")
-        end
-      end
-    end
+    
   endtask
 endclass
-```

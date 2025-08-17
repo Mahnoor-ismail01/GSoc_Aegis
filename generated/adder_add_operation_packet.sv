@@ -6,7 +6,7 @@ class adder_add_operation_packet extends uvm_sequence_item;
 
 
   
-  logic rstn; // Input (Active-low reset input)
+  logic [0:0] rstn; // Input (Active-low reset input)
   
   
 
@@ -27,7 +27,7 @@ class adder_add_operation_packet extends uvm_sequence_item;
   
 
   
-  logic carry; // Output (Carry-out output)
+  logic [0:0] carry; // Output (Carry-out output)
   
 
 
@@ -39,42 +39,21 @@ class adder_add_operation_packet extends uvm_sequence_item;
     adder_add_operation_packet tmp;
     super.do_copy(rhs);
     if (!$cast(tmp, rhs)) `uvm_fatal("COPY", "Cast failed in do_copy")
-
     
     this.rstn = tmp.rstn;
     
-
-    
     this.a = tmp.a;
-    
-
     
     this.b = tmp.b;
     
-
-    
     this.sum = tmp.sum;
-    
-
     
     this.carry = tmp.carry;
     
-
   endfunction
 
   virtual function string convert2string();
-    string s = $sformatf("rstn=%0b a=%0h b=%0h sum=%0h carry=%0b", rstn, a, b, sum, carry);
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    string s = $sformatf("=%0h =%0h =%0h =%0h =%0h", rstn, a, b, sum, carry);
     return s;
   endfunction
 endclass

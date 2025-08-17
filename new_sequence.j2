@@ -1,4 +1,4 @@
-```
+
 import uvm_pkg::*;
 `include "{{ dut_name }}_{{ transaction_type }}_packet.sv"
 
@@ -15,11 +15,11 @@ class {{ sequence_name }} extends uvm_sequence;
 
   // Body task to generate and randomize transactions
   virtual task body();
-    repeat ({{ test_case.loops }}) begin
+    repeat ({{ test_case.loops|default(1) }}) begin
       `uvm_info("SEQUENCE", $sformatf("Starting iteration %0d for %s", this.get_sequence_id(), "{{ test_case.name }}"), UVM_LOW)
       pkt = {{ dut_name }}_{{ transaction_type }}_packet::type_id::create("pkt");
       if (!pkt.randomize() with {
-        {% for constraint in test_case.constraints %}
+        {% for constraint in test_case.constraints|default([]) %}
         {{ constraint }};
         {% endfor %}
       }) begin
@@ -27,28 +27,34 @@ class {{ sequence_name }} extends uvm_sequence;
       end
 
       // Apply delay
-      #{{ test_case.delay }};
+      #{{ test_case.delay|default(0) }};
 
       // Start item and finish item
       start_item(pkt);
       finish_item(pkt);
 
-      // Check expected output (basic comparison)
+      // Check expected output
+      {% if test_case.expected_output is defined and test_case.expected_output %}
       if (pkt.rstn) begin
+        // Custom logic check for adder
         if (pkt.sum != (pkt.a + pkt.b)[7:0] || pkt.carry != (pkt.a + pkt.b)[8]) begin
           `uvm_error("CHECK", $sformatf("Mismatch: sum=%0h, carry=%0b, expected sum=%0h, carry=%0b", pkt.sum, pkt.carry, (pkt.a + pkt.b)[7:0], (pkt.a + pkt.b)[8]))
         end
-      {% for key, value in test_case.expected_output.items() %}
+        {% for key, value in test_case.expected_output.items() %}
         if (pkt.{{ key }} != {{ value }}) begin
-          `uvm_error("CHECK", $sformatf("Expected {{ key }}=%s, got %s", {{ value }}, pkt.{{ key }}))
+          `uvm_error("CHECK", $sformatf("Expected {{ key }}=%0h, got %0h", {{ value }}, pkt.{{ key }}))
         end
-      {% endfor %}
+        {% endfor %}
       end else begin
         if (pkt.sum != 0 || pkt.carry != 0) begin
-          `uvm_error("CHECK", "Reset active but sum or carry not zero")
+          `uvm_error("CHECK", $sformatf("Reset active but expected sum=0x00 and carry=0, got sum=0x%h and carry=%0b", pkt.sum, pkt.carry))
         end
       end
+      {% else %}
+      if (!pkt.rstn and (pkt.sum != 0 || pkt.carry != 0)) begin
+        `uvm_error("CHECK", $sformatf("Reset active but expected sum=0x00 and carry=0, got sum=0x%h and carry=%0b", pkt.sum, pkt.carry))
+      end
+      {% endif %}
     end
   endtask
 endclass
-```
